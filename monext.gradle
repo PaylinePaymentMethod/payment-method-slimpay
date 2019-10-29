@@ -2,7 +2,7 @@
 repositories {
     mavenLocal()
     maven {
-        url nexusPublicUrl
+        url nexusGroupsUrl
         credentials {
             username mavenUser
             password mavenPassword
@@ -33,7 +33,7 @@ publishing {
             if (project.version.endsWith('-SNAPSHOT')) {
                 url nexusSnapshotUrl
             } else {
-                url nexusGroupsUrl
+                url nexusPublicUrl
             }
             credentials {
                 username mavenUser
