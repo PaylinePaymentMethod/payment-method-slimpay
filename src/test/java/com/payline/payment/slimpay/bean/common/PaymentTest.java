@@ -1,34 +1,60 @@
 package com.payline.payment.slimpay.bean.common;
 
-import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.LoggerConfig;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.reflect.Whitebox;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@PrepareForTest({Payment.class})
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class PaymentTest {
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class PaymentTest {
+
+    @Mock
+    private Appender appender;
+
+    @Captor
+    private ArgumentCaptor<LogEvent> captor;
 
     private Payment payment;
 
-
-    private Logger mockLogger;
+    private LoggerConfig loggerConfig;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
+        when(appender.getName()).thenReturn("MockAppender");
+        lenient().when(appender.isStarted()).thenReturn(true);
 
-        mockLogger = Mockito.mock(Logger.class);
-
-        Whitebox.setInternalState(Payment.class, "LOGGER", mockLogger);
+        final LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+        final Configuration config = ctx.getConfiguration();
+        loggerConfig = config.getLoggerConfig("com.payline.payment.slimpay.bean.common.PaymentTest");
+        loggerConfig.addAppender(appender, Level.INFO, null);
     }
 
+    @AfterEach
+    void tearDown() {
+        loggerConfig.removeAppender("MockAppender");
+    }
 
     @Test
-    public void testPaymentOK(){
+    void testPaymentOK(){
         payment = Payment.Builder.aPaymentBuilder()
                 .withReference("PAYMENT-REF-1")
                 .withScheme("SEPA.DIRECT_DEBIT.CORE")
@@ -49,22 +75,32 @@ public class PaymentTest {
 
 
     @Test
-    public void testPaymentKO(){
+    void testPaymentKO(){
         payment = Payment.Builder.aPaymentBuilder()
                 .withAction("payin")
                 .withLabel("the label")
                 .build();
         //test on logs
-        Mockito.verify(mockLogger, Mockito.times(1)).warn(Mockito.eq(Payment.AMOUNT_WARN));
-        Mockito.verify(mockLogger, Mockito.times(1)).warn(Mockito.eq(Payment.DIRECTION_WARN));
-        Mockito.verify(mockLogger, Mockito.times(1)).warn(Mockito.eq(Payment.CURRENCY_WARN));
-        Mockito.verify(mockLogger, Mockito.times(1)).warn(Mockito.eq(Payment.REFERENCE_WARN));
+        Mockito.verify(appender, Mockito.atLeastOnce()).append(captor.capture());
+        final List<LogEvent> logs = captor.getAllValues();
+        assertEquals(5, logs.size());
+
+        assertEquals(Level.WARN, logs.get(0).getLevel());
+        assertEquals(Payment.REFERENCE_WARN, logs.get(0).getMessage().getFormattedMessage());
+        assertEquals(Level.WARN, logs.get(1).getLevel());
+        assertEquals(Payment.SCHEME_WARN, logs.get(1).getMessage().getFormattedMessage());
+        assertEquals(Level.WARN, logs.get(2).getLevel());
+        assertEquals(Payment.AMOUNT_WARN, logs.get(2).getMessage().getFormattedMessage());
+        assertEquals(Level.WARN, logs.get(3).getLevel());
+        assertEquals(Payment.CURRENCY_WARN, logs.get(3).getMessage().getFormattedMessage());
+        assertEquals(Level.WARN, logs.get(4).getLevel());
+        assertEquals(Payment.DIRECTION_WARN, logs.get(4).getMessage().getFormattedMessage());
     }
 
 
 
     @Test
-    public void testPaymentWithWrongDirection(){
+    void testPaymentWithWrongDirection(){
         payment = Payment.Builder.aPaymentBuilder()
                 .withDirection("ouest")
                 .build();
@@ -72,9 +108,21 @@ public class PaymentTest {
         String jsonPayment = payment.toString();
         Assertions.assertTrue(jsonPayment.contains("direction"));
 
-        Mockito.verify(mockLogger, Mockito.times(1)).warn(Mockito.eq(Payment.WRONG_DIRECTION_WARN));
-        Mockito.verify(mockLogger, Mockito.times(1)).warn(Mockito.eq(Payment.AMOUNT_WARN));
-        Mockito.verify(mockLogger, Mockito.times(1)).warn(Mockito.eq(Payment.CURRENCY_WARN));
-        Mockito.verify(mockLogger, Mockito.times(1)).warn(Mockito.eq(Payment.REFERENCE_WARN));
+        Mockito.verify(appender, Mockito.atLeastOnce()).append(captor.capture());
+        final List<LogEvent> logs = captor.getAllValues();
+        assertEquals(6, logs.size());
+
+        assertEquals(Level.WARN, logs.get(0).getLevel());
+        assertEquals(Payment.REFERENCE_WARN, logs.get(0).getMessage().getFormattedMessage());
+        assertEquals(Level.WARN, logs.get(1).getLevel());
+        assertEquals(Payment.SCHEME_WARN, logs.get(1).getMessage().getFormattedMessage());
+        assertEquals(Level.WARN, logs.get(2).getLevel());
+        assertEquals(Payment.AMOUNT_WARN, logs.get(2).getMessage().getFormattedMessage());
+        assertEquals(Level.WARN, logs.get(3).getLevel());
+        assertEquals(Payment.CURRENCY_WARN, logs.get(3).getMessage().getFormattedMessage());
+        assertEquals(Level.WARN, logs.get(4).getLevel());
+        assertEquals(Payment.ACTION_WARN, logs.get(4).getMessage().getFormattedMessage());
+        assertEquals(Level.WARN, logs.get(5).getLevel());
+        assertEquals(Payment.WRONG_DIRECTION_WARN, logs.get(5).getMessage().getFormattedMessage());
     }
 }
