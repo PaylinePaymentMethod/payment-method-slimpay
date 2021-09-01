@@ -1,33 +1,60 @@
 package com.payline.payment.slimpay.bean.common;
 
-import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.LoggerConfig;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.reflect.Whitebox;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@PrepareForTest({BillingAddress.class})
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class BillingAddressTest {
+import java.util.List;
 
-    private  BillingAddress address;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.when;
 
-    private Logger mockLogger;
+@ExtendWith(MockitoExtension.class)
+class BillingAddressTest {
+
+    @Mock
+    private Appender appender;
+
+    @Captor
+    private ArgumentCaptor<LogEvent> captor;
+
+    private BillingAddress address;
+
+    private LoggerConfig loggerConfig;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
+        when(appender.getName()).thenReturn("MockAppender");
+        lenient().when(appender.isStarted()).thenReturn(true);
 
-        mockLogger = Mockito.mock(Logger.class);
-
-        Whitebox.setInternalState(BillingAddress.class, "LOGGER", mockLogger);
+        final LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+        final Configuration config = ctx.getConfiguration();
+        loggerConfig = config.getLoggerConfig("com.payline.payment.slimpay.bean.common.BillingAddress");
+        loggerConfig.addAppender(appender, Level.INFO, null);
     }
 
+    @AfterEach
+    void tearDown() {
+        loggerConfig.removeAppender("MockAppender");
+    }
 
     @Test
-    public  void billingAddressTestOK(){
+    void billingAddressTestOK(){
         address = BillingAddress.Builder.aBillingAddressBuilder()
                 .withStreet1("10 rue de la paix")
                 .withStreet2("residence peace")
@@ -45,16 +72,21 @@ public class BillingAddressTest {
     }
 
     @Test
-    public  void billingAddressTestKO(){
+    void billingAddressTestKO(){
         address = BillingAddress.Builder.aBillingAddressBuilder()
                 .build();
 
-        Mockito.verify(mockLogger, Mockito.times(1)).warn(Mockito.eq(BillingAddress.STREET_WARN));
-        Mockito.verify(mockLogger, Mockito.times(1)).warn(Mockito.eq(BillingAddress.CITY_WARN));
-        Mockito.verify(mockLogger, Mockito.times(1)).warn(Mockito.eq(BillingAddress.COUNTRY_WARN));
-        Mockito.verify(mockLogger, Mockito.times(1)).warn(Mockito.eq(BillingAddress.POSTAL_CODE_WARN));
+        Mockito.verify(appender, Mockito.atLeastOnce()).append(captor.capture());
+        final List<LogEvent> logs = captor.getAllValues();
+        assertEquals(4, logs.size());
 
-//        String jsonAddress= address.toString();
-
+        assertEquals(Level.WARN, logs.get(0).getLevel());
+        assertEquals(BillingAddress.STREET_WARN, logs.get(0).getMessage().getFormattedMessage());
+        assertEquals(Level.WARN, logs.get(1).getLevel());
+        assertEquals(BillingAddress.CITY_WARN, logs.get(1).getMessage().getFormattedMessage());
+        assertEquals(Level.WARN, logs.get(2).getLevel());
+        assertEquals(BillingAddress.POSTAL_CODE_WARN, logs.get(2).getMessage().getFormattedMessage());
+        assertEquals(Level.WARN, logs.get(3).getLevel());
+        assertEquals(BillingAddress.COUNTRY_WARN, logs.get(3).getMessage().getFormattedMessage());
     }
 }

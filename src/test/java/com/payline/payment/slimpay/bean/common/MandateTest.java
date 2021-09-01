@@ -1,22 +1,36 @@
 package com.payline.payment.slimpay.bean.common;
 
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.LoggerConfig;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.reflect.Whitebox;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.List;
 
 import static com.payline.payment.slimpay.utils.BeansUtils.createDefaultSignatory;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.when;
 
 
-@PrepareForTest({Mandate.class})
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class MandateTest {
+@ExtendWith(MockitoExtension.class)
+class MandateTest {
 
     private static final Logger LOGGER = LogManager.getLogger(MandateTest.class);
 
@@ -30,19 +44,32 @@ public class MandateTest {
     public static final String PAYMENT_REF_1 = "PAYMENT-REF-1";
     private Mandate mandate;
 
-    private Logger mockLogger;
+    @Mock
+    private Appender appender;
+
+    @Captor
+    private ArgumentCaptor<LogEvent> captor;
+
+    private LoggerConfig loggerConfig;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
+        when(appender.getName()).thenReturn("MockAppender");
+        lenient().when(appender.isStarted()).thenReturn(true);
 
-        mockLogger = Mockito.mock(Logger.class);
+        final LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+        final Configuration config = ctx.getConfiguration();
+        loggerConfig = config.getLoggerConfig("com.payline.payment.slimpay.bean.common.MandateTest");
+        loggerConfig.addAppender(appender, Level.INFO, null);
+    }
 
-        Whitebox.setInternalState(Mandate.class, "LOGGER", mockLogger);
-
+    @AfterEach
+    void tearDown() {
+        loggerConfig.removeAppender("MockAppender");
     }
 
     @Test
-    public void testMandateOK() {
+    void testMandateOK() {
 
         mandate = Mandate.Builder.aMandateBuilder()
                 .withReference(PAYMENT_REF_1)
@@ -53,8 +80,7 @@ public class MandateTest {
                 .build();
         String jsonMandate = mandate.toString();
 
-
-        Mockito.verify(mockLogger, Mockito.never()).warn(Mockito.anyString());
+        Mockito.verify(appender, Mockito.never()).append(any());
 
         LOGGER.info(jsonMandate);
         Assertions.assertTrue(jsonMandate.contains(REFERENCE));
@@ -67,7 +93,7 @@ public class MandateTest {
 
 
     @Test
-    public void testMandateWoReference() {
+    void testMandateWoReference() {
 
         mandate = Mandate.Builder.aMandateBuilder()
                 .withSignatory(createDefaultSignatory())
@@ -76,7 +102,12 @@ public class MandateTest {
                 .withCreateSequenceType(CREATE_SEQUENCE_TYPE)
                 .build();
 
-        Mockito.verify(mockLogger, Mockito.times(1)).warn(Mockito.eq(Mandate.REFERENCE_WARN));
+        Mockito.verify(appender, Mockito.atLeastOnce()).append(captor.capture());
+        final List<LogEvent> logs = captor.getAllValues();
+        assertEquals(1, logs.size());
+
+        assertEquals(Level.WARN, logs.get(0).getLevel());
+        assertEquals(Mandate.REFERENCE_WARN, logs.get(0).getMessage().getFormattedMessage());
 
         String jsonMandate = mandate.toString();
         LOGGER.info(jsonMandate);
@@ -90,7 +121,7 @@ public class MandateTest {
 
 
     @Test
-    public void testMandateWoSignatory() {
+    void testMandateWoSignatory() {
 
         mandate = Mandate.Builder.aMandateBuilder()
                 .withReference(PAYMENT_REF_1)
@@ -100,7 +131,12 @@ public class MandateTest {
                 .build();
         String jsonMandate = mandate.toString();
 
-        Mockito.verify(mockLogger, Mockito.times(1)).warn(Mockito.eq(Mandate.SIGNATORY_WARN));
+        Mockito.verify(appender, Mockito.atLeastOnce()).append(captor.capture());
+        final List<LogEvent> logs = captor.getAllValues();
+        assertEquals(1, logs.size());
+
+        assertEquals(Level.WARN, logs.get(0).getLevel());
+        assertEquals(Mandate.SIGNATORY_WARN, logs.get(0).getMessage().getFormattedMessage());
 
         LOGGER.info(jsonMandate);
         Assertions.assertTrue(jsonMandate.contains(REFERENCE));
@@ -113,7 +149,7 @@ public class MandateTest {
 
 
     @Test
-    public void testMandateWoPaymentScheme() {
+    void testMandateWoPaymentScheme() {
 
         mandate = Mandate.Builder.aMandateBuilder()
                 .withReference(PAYMENT_REF_1)
@@ -123,7 +159,12 @@ public class MandateTest {
                 .build();
         String jsonMandate = mandate.toString();
 
-        Mockito.verify(mockLogger, Mockito.times(1)).warn(Mockito.eq(Mandate.PAYMENT_SCHEME_WARN));
+        Mockito.verify(appender, Mockito.atLeastOnce()).append(captor.capture());
+        final List<LogEvent> logs = captor.getAllValues();
+        assertEquals(1, logs.size());
+
+        assertEquals(Level.WARN, logs.get(0).getLevel());
+        assertEquals(Mandate.PAYMENT_SCHEME_WARN, logs.get(0).getMessage().getFormattedMessage());
 
         LOGGER.info(jsonMandate);
         Assertions.assertTrue(jsonMandate.contains(REFERENCE));
@@ -136,7 +177,7 @@ public class MandateTest {
 
 
     @Test
-    public void testMandateWoCreateSequenceType() {
+    void testMandateWoCreateSequenceType() {
 
         mandate = Mandate.Builder.aMandateBuilder()
                 .withReference(PAYMENT_REF_1)
@@ -146,7 +187,12 @@ public class MandateTest {
                 .build();
         String jsonMandate = mandate.toString();
 
-        Mockito.verify(mockLogger, Mockito.times(1)).warn(Mockito.eq(Mandate.CREATE_SEQUENCE_TYPE_WARN));
+        Mockito.verify(appender, Mockito.atLeastOnce()).append(captor.capture());
+        final List<LogEvent> logs = captor.getAllValues();
+        assertEquals(1, logs.size());
+
+        assertEquals(Level.WARN, logs.get(0).getLevel());
+        assertEquals(Mandate.CREATE_SEQUENCE_TYPE_WARN, logs.get(0).getMessage().getFormattedMessage());
 
         LOGGER.info(jsonMandate);
         Assertions.assertTrue(jsonMandate.contains(REFERENCE));
