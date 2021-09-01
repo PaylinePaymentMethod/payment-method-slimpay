@@ -14,7 +14,6 @@ import com.payline.pmapi.bean.paymentform.request.PaymentFormConfigurationReques
 import com.payline.pmapi.bean.refund.request.RefundRequest;
 import com.payline.pmapi.bean.reset.request.ResetRequest;
 import com.payline.pmapi.logger.LogManager;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.logging.log4j.Logger;
 
 import java.math.BigDecimal;
@@ -108,13 +107,6 @@ public class TestUtils {
     }};
 
     public static final PartnerConfiguration PARTNER_CONFIGURATION = new PartnerConfiguration(PARTNER_CONFIGURATION_MAP, SENSITIVE_PARTNER_CONFIGURATION_MAP);
-
-    public static Address createRandomAddress() {
-        return createCompleteAddress(RandomStringUtils.random(3, false, true)
-                        + " rue " + RandomStringUtils.random(5, true, false),
-                "residence " + RandomStringUtils.random(9
-                        , true, false), "Marseille", "13015", "FR");
-    }
 
     public static Address createDefaultCompleteAddress() {
         return createCompleteAddress("141 rue de la Paix",
