@@ -1,4 +1,4 @@
-rootProject.name = 'payment-method-slimpay'
+rootProject.name = 'payment-method-sdd-slimpay'
 
 if (file('../payline-payment-method-api').exists()) {
     includeBuild '../payline-payment-method-api'
