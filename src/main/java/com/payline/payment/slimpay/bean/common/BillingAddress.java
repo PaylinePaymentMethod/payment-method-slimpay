@@ -6,7 +6,7 @@ import org.apache.logging.log4j.Logger;
 
 public class BillingAddress extends SlimpayBean {
 
-    private static final Logger LOGGER = LogManager.getLogger(Signatory.class);
+    private static final Logger LOGGER = LogManager.getLogger(BillingAddress.class);
 
     protected static final String STREET_WARN = "BillingAddress must have a street1 when built";
     protected static final String CITY_WARN = "BillingAddress must have a city when built";

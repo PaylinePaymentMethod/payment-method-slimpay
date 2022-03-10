@@ -1,32 +1,60 @@
 package com.payline.payment.slimpay.bean.request;
 
+import com.payline.payment.slimpay.bean.common.BillingAddress;
 import com.payline.payment.slimpay.bean.common.Creditor;
 import com.payline.payment.slimpay.bean.common.SlimPayOrderItem;
 import com.payline.payment.slimpay.bean.common.Subscriber;
-import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.LoggerConfig;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.reflect.Whitebox;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static com.payline.payment.slimpay.utils.BeansUtils.createDefaultOrderItemMandate;
 import static com.payline.payment.slimpay.utils.BeansUtils.createDefaultOrderItemPayment;
-@PrepareForTest({SlimpayOrderRequest.class})
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
 public class SlimpayOrderRequestTest {
 
     private SlimpayOrderRequest orderRequest;
-    private Logger mockLogger;
+
+    @Mock
+    private Appender appender;
+
+    @Captor
+    private ArgumentCaptor<LogEvent> captor;
+
+    private LoggerConfig loggerConfig;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
 
-        mockLogger = Mockito.mock(Logger.class);
+        doReturn("MockAppender").when(appender).getName();
+        lenient().doReturn(true).when(appender).isStarted();
 
-        Whitebox.setInternalState(SlimpayOrderRequest.class, "LOGGER", mockLogger);
+        final LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+        final Configuration config = ctx.getConfiguration();
+        loggerConfig = config.getLoggerConfig(BillingAddress.class.getSimpleName());
+        loggerConfig.addAppender(appender, Level.INFO, null);
+    }
+
+    @AfterEach
+    void tearDown() {
+        loggerConfig.removeAppender("MockAppender");
     }
 
     @Test
@@ -58,15 +86,11 @@ public class SlimpayOrderRequestTest {
     @Test
     public void slimpayOrderRequestEmpty() {
 
-
         orderRequest = SlimpayOrderRequest.Builder.aSlimPayOrderRequestBuilder()
                 .build();
-        Mockito.verify(mockLogger, Mockito.times(1)).warn(Mockito.eq(SlimpayOrderRequest.CREDITOR_WARN));
-        Mockito.verify(mockLogger, Mockito.times(1)).warn(Mockito.eq(SlimpayOrderRequest.SUBSCRIBER_WARN));
-        Mockito.verify(mockLogger, Mockito.times(1)).warn(Mockito.eq(SlimpayOrderRequest.ITEMS_WARN));
-        Mockito.verify(mockLogger, Mockito.times(1)).warn(Mockito.eq(SlimpayOrderRequest.FAIL_URL_WARN));
-        Mockito.verify(mockLogger, Mockito.times(1)).warn(Mockito.eq(SlimpayOrderRequest.SUCCESS_URL_WARN));
 
+        verify(appender, Mockito.atLeastOnce()).append(captor.capture());
+        assertEquals(5, captor.getAllValues().size());
     }
 
 }

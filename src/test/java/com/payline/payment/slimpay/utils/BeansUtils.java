@@ -29,6 +29,8 @@ public class BeansUtils {
                 .withPaymentScheme("SEPA.DIRECT_DEBIT.CORE")
                 .withStandard("SEPA")
                 .withAction("sign")
+                .withSequenceType("SequenceType")
+                .withCreateSequenceType("CreateSequenceType")
                 .build();
     }
 

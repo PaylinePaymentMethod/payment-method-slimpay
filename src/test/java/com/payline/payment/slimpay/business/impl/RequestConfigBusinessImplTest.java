@@ -13,14 +13,17 @@ import com.payline.pmapi.bean.paymentform.request.PaymentFormConfigurationReques
 import com.payline.pmapi.bean.paymentform.request.PaymentFormLogoRequest;
 import com.payline.pmapi.bean.refund.request.RefundRequest;
 import com.payline.pmapi.bean.reset.request.ResetRequest;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
-import org.powermock.reflect.Whitebox;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@ExtendWith(MockitoExtension.class)
 class RequestConfigBusinessImplTest {
 
     private static final String PARTNER = "PARTNER";
@@ -32,19 +35,16 @@ class RequestConfigBusinessImplTest {
     private PartnerConfiguration partnerConfiguration;
     private ContractConfiguration contractConfiguration;
     private Map<String, String> accountInfo;
-    private Map<String, RequestConfigBusinessImpl.PaylineParameterType> copy = new HashMap<>(RequestConfigBusinessImpl.PARAMETERS_MAP);
 
-    private RequestConfigBusinessImpl service = RequestConfigBusinessImpl.getInstance();
+    private RequestConfigBusinessImpl underTest = RequestConfigBusinessImpl.getInstance();
 
-    @BeforeAll
+    @BeforeEach
     public void setup() {
-        Map<String, RequestConfigBusinessImpl.PaylineParameterType> map = new HashMap<>();
+        final Map<String, RequestConfigBusinessImpl.PaylineParameterType> map = RequestConfigBusinessImpl.PARAMETERS_MAP;
 
         map.put(CONTRACT_CONF, RequestConfigBusinessImpl.PaylineParameterType.CONTRACT_CONFIGURATION_PARAMETER);
         map.put(EXT, RequestConfigBusinessImpl.PaylineParameterType.CONTRACT_CONFIGURATION_PARAMETER);
         map.put(PARTNER_CONF, RequestConfigBusinessImpl.PaylineParameterType.PARTNER_CONFIGURATION_PARAMETER);
-
-        Whitebox.setInternalState(RequestConfigBusinessImpl.class, "PARAMETERS_MAP", map);
 
         partnerConfiguration = new PartnerConfiguration(new HashMap<>(), new HashMap<>());
         partnerConfiguration.getSensitiveProperties().put(PARTNER_CONF, PARTNER);
@@ -58,12 +58,6 @@ class RequestConfigBusinessImplTest {
         accountInfo.put(EXT, EXT);
     }
 
-    @AfterAll
-    public void tearDown() {
-        // réinit de la map ...
-        Whitebox.setInternalState(RequestConfigBusinessImpl.class, "PARAMETERS_MAP", copy);
-    }
-
     @Test
     void getParameterValue_ResetRequest() {
         ResetRequest request = Mockito.mock(ResetRequest.class);
@@ -71,14 +65,14 @@ class RequestConfigBusinessImplTest {
         Mockito.when(request.getContractConfiguration()).thenReturn(contractConfiguration);
         Mockito.when(request.getPartnerConfiguration()).thenReturn(partnerConfiguration);
 
-        String nullKey = service.getParameterValue(request, null);
+        String nullKey = underTest.getParameterValue(request, null);
         Assertions.assertNull(nullKey);
 
-        String contractConf = service.getParameterValue(request, CONTRACT_CONF);
+        String contractConf = underTest.getParameterValue(request, CONTRACT_CONF);
         Assertions.assertNotNull(contractConf);
         Assertions.assertEquals(CONTRACT, contractConf);
 
-        String partnerConf = service.getParameterValue(request, PARTNER_CONF);
+        String partnerConf = underTest.getParameterValue(request, PARTNER_CONF);
         Assertions.assertNotNull(partnerConf);
         Assertions.assertEquals(PARTNER, partnerConf);
     }
@@ -90,14 +84,14 @@ class RequestConfigBusinessImplTest {
         Mockito.when(request.getContractConfiguration()).thenReturn(contractConfiguration);
         Mockito.when(request.getPartnerConfiguration()).thenReturn(partnerConfiguration);
 
-        String nullKey = service.getParameterValue(request, null);
+        String nullKey = underTest.getParameterValue(request, null);
         Assertions.assertNull(nullKey);
 
-        String contractConf = service.getParameterValue(request, CONTRACT_CONF);
+        String contractConf = underTest.getParameterValue(request, CONTRACT_CONF);
         Assertions.assertNotNull(contractConf);
         Assertions.assertEquals(CONTRACT, contractConf);
 
-        String partnerConf = service.getParameterValue(request, PARTNER_CONF);
+        String partnerConf = underTest.getParameterValue(request, PARTNER_CONF);
         Assertions.assertNotNull(partnerConf);
         Assertions.assertEquals(PARTNER, partnerConf);
     }
@@ -109,14 +103,14 @@ class RequestConfigBusinessImplTest {
         Mockito.when(request.getContractConfiguration()).thenReturn(contractConfiguration);
         Mockito.when(request.getPartnerConfiguration()).thenReturn(partnerConfiguration);
 
-        String nullKey = service.getParameterValue(request, null);
+        String nullKey = underTest.getParameterValue(request, null);
         Assertions.assertNull(nullKey);
 
-        String contractConf = service.getParameterValue(request, CONTRACT_CONF);
+        String contractConf = underTest.getParameterValue(request, CONTRACT_CONF);
         Assertions.assertNotNull(contractConf);
         Assertions.assertEquals(CONTRACT, contractConf);
 
-        String partnerConf = service.getParameterValue(request, PARTNER_CONF);
+        String partnerConf = underTest.getParameterValue(request, PARTNER_CONF);
         Assertions.assertNotNull(partnerConf);
         Assertions.assertEquals(PARTNER, partnerConf);
     }
@@ -128,14 +122,14 @@ class RequestConfigBusinessImplTest {
         Mockito.when(request.getContractConfiguration()).thenReturn(contractConfiguration);
         Mockito.when(request.getPartnerConfiguration()).thenReturn(partnerConfiguration);
 
-        String nullKey = service.getParameterValue(request, null);
+        String nullKey = underTest.getParameterValue(request, null);
         Assertions.assertNull(nullKey);
 
-        String contractConf = service.getParameterValue(request, CONTRACT_CONF);
+        String contractConf = underTest.getParameterValue(request, CONTRACT_CONF);
         Assertions.assertNotNull(contractConf);
         Assertions.assertEquals(CONTRACT, contractConf);
 
-        String partnerConf = service.getParameterValue(request, PARTNER_CONF);
+        String partnerConf = underTest.getParameterValue(request, PARTNER_CONF);
         Assertions.assertNotNull(partnerConf);
         Assertions.assertEquals(PARTNER, partnerConf);
     }
@@ -147,14 +141,14 @@ class RequestConfigBusinessImplTest {
         Mockito.when(request.getContractConfiguration()).thenReturn(contractConfiguration);
         Mockito.when(request.getPartnerConfiguration()).thenReturn(partnerConfiguration);
 
-        String nullKey = service.getParameterValue(request, null);
+        String nullKey = underTest.getParameterValue(request, null);
         Assertions.assertNull(nullKey);
 
-        String contractConf = service.getParameterValue(request, CONTRACT_CONF);
+        String contractConf = underTest.getParameterValue(request, CONTRACT_CONF);
         Assertions.assertNotNull(contractConf);
         Assertions.assertEquals(CONTRACT, contractConf);
 
-        String partnerConf = service.getParameterValue(request, PARTNER_CONF);
+        String partnerConf = underTest.getParameterValue(request, PARTNER_CONF);
         Assertions.assertNotNull(partnerConf);
         Assertions.assertEquals(PARTNER, partnerConf);
     }
@@ -166,14 +160,14 @@ class RequestConfigBusinessImplTest {
         Mockito.when(request.getContractConfiguration()).thenReturn(contractConfiguration);
         Mockito.when(request.getPartnerConfiguration()).thenReturn(partnerConfiguration);
 
-        String nullKey = service.getParameterValue(request, null);
+        String nullKey = underTest.getParameterValue(request, null);
         Assertions.assertNull(nullKey);
 
-        String contractConf = service.getParameterValue(request, CONTRACT_CONF);
+        String contractConf = underTest.getParameterValue(request, CONTRACT_CONF);
         Assertions.assertNotNull(contractConf);
         Assertions.assertEquals(CONTRACT, contractConf);
 
-        String partnerConf = service.getParameterValue(request, PARTNER_CONF);
+        String partnerConf = underTest.getParameterValue(request, PARTNER_CONF);
         Assertions.assertNotNull(partnerConf);
         Assertions.assertEquals(PARTNER, partnerConf);
     }
@@ -185,14 +179,14 @@ class RequestConfigBusinessImplTest {
         Mockito.when(request.getContractConfiguration()).thenReturn(contractConfiguration);
         Mockito.when(request.getPartnerConfiguration()).thenReturn(partnerConfiguration);
 
-        String nullKey = service.getParameterValue(request, null);
+        String nullKey = underTest.getParameterValue(request, null);
         Assertions.assertNull(nullKey);
 
-        String contractConf = service.getParameterValue(request, CONTRACT_CONF);
+        String contractConf = underTest.getParameterValue(request, CONTRACT_CONF);
         Assertions.assertNotNull(contractConf);
         Assertions.assertEquals(CONTRACT, contractConf);
 
-        String partnerConf = service.getParameterValue(request, PARTNER_CONF);
+        String partnerConf = underTest.getParameterValue(request, PARTNER_CONF);
         Assertions.assertNotNull(partnerConf);
         Assertions.assertEquals(PARTNER, partnerConf);
     }
@@ -201,18 +195,17 @@ class RequestConfigBusinessImplTest {
     void getParameterValue_ContractParametersCheckRequest() {
         ContractParametersCheckRequest request = Mockito.mock(ContractParametersCheckRequest.class);
 
-        Mockito.when(request.getContractConfiguration()).thenReturn(contractConfiguration);
         Mockito.when(request.getPartnerConfiguration()).thenReturn(partnerConfiguration);
         Mockito.when(request.getAccountInfo()).thenReturn(accountInfo);
 
-        String nullKey = service.getParameterValue(request, null);
+        String nullKey = underTest.getParameterValue(request, null);
         Assertions.assertNull(nullKey);
 
-        String contractConf = service.getParameterValue(request, CONTRACT_CONF);
+        String contractConf = underTest.getParameterValue(request, CONTRACT_CONF);
         Assertions.assertNotNull(contractConf);
         Assertions.assertEquals(CONTRACT, contractConf);
 
-        String partnerConf = service.getParameterValue(request, PARTNER_CONF);
+        String partnerConf = underTest.getParameterValue(request, PARTNER_CONF);
         Assertions.assertNotNull(partnerConf);
         Assertions.assertEquals(PARTNER, partnerConf);
     }
@@ -224,14 +217,14 @@ class RequestConfigBusinessImplTest {
         Mockito.when(request.getContractConfiguration()).thenReturn(contractConfiguration);
         Mockito.when(request.getPartnerConfiguration()).thenReturn(partnerConfiguration);
 
-        String nullKey = service.getParameterValue(request, null);
+        String nullKey = underTest.getParameterValue(request, null);
         Assertions.assertNull(nullKey);
 
-        String contractConf = service.getParameterValue(request, CONTRACT_CONF);
+        String contractConf = underTest.getParameterValue(request, CONTRACT_CONF);
         Assertions.assertNotNull(contractConf);
         Assertions.assertEquals(CONTRACT, contractConf);
 
-        String partnerConf = service.getParameterValue(request, PARTNER_CONF);
+        String partnerConf = underTest.getParameterValue(request, PARTNER_CONF);
         Assertions.assertNotNull(partnerConf);
         Assertions.assertEquals(PARTNER, partnerConf);
     }
@@ -243,60 +236,60 @@ class RequestConfigBusinessImplTest {
         Mockito.when(request.getContractConfiguration()).thenReturn(contractConfiguration);
         Mockito.when(request.getPartnerConfiguration()).thenReturn(partnerConfiguration);
 
-        String nullKey = service.getParameterValue(request, null);
+        String nullKey = underTest.getParameterValue(request, null);
         Assertions.assertNull(nullKey);
 
-        String contractConf = service.getParameterValue(request, CONTRACT_CONF);
+        String contractConf = underTest.getParameterValue(request, CONTRACT_CONF);
         Assertions.assertNotNull(contractConf);
         Assertions.assertEquals(CONTRACT, contractConf);
 
-        String partnerConf = service.getParameterValue(request, PARTNER_CONF);
+        String partnerConf = underTest.getParameterValue(request, PARTNER_CONF);
         Assertions.assertNotNull(partnerConf);
         Assertions.assertEquals(PARTNER, partnerConf);
     }
 
     @Test
     void safeGetValuePartnerConfigurationAndKey() {
-        String nullSource = service.safeGetValue((PartnerConfiguration) null, "test");
+        String nullSource = underTest.safeGetValue((PartnerConfiguration) null, "test");
         Assertions.assertNull(nullSource);
 
-        String nullKey = service.safeGetValue(partnerConfiguration, null);
+        String nullKey = underTest.safeGetValue(partnerConfiguration, null);
         Assertions.assertNull(nullKey);
 
-        String emptyKey = service.safeGetValue(partnerConfiguration, "");
+        String emptyKey = underTest.safeGetValue(partnerConfiguration, "");
         Assertions.assertNull(emptyKey);
 
-        String wrongKey = service.safeGetValue(partnerConfiguration, "wrong");
+        String wrongKey = underTest.safeGetValue(partnerConfiguration, "wrong");
         Assertions.assertNull(wrongKey);
     }
 
     @Test
     void safeGetValueContractConfigurationAndKey() {
-        String nullSource = service.safeGetValue((ContractConfiguration) null, "test");
+        String nullSource = underTest.safeGetValue((ContractConfiguration) null, "test");
         Assertions.assertNull(nullSource);
 
-        String nullKey = service.safeGetValue(contractConfiguration, null);
+        String nullKey = underTest.safeGetValue(contractConfiguration, null);
         Assertions.assertNull(nullKey);
 
-        String emptyKey = service.safeGetValue(contractConfiguration, "");
+        String emptyKey = underTest.safeGetValue(contractConfiguration, "");
         Assertions.assertNull(emptyKey);
 
-        String wrongKey = service.safeGetValue(contractConfiguration, "wrong");
+        String wrongKey = underTest.safeGetValue(contractConfiguration, "wrong");
         Assertions.assertNull(wrongKey);
     }
 
     @Test
     void safeGetValueAccountInfoAndKey() {
-        String nullSource = service.safeGetValue((HashMap) null, "test");
+        String nullSource = underTest.safeGetValue((HashMap) null, "test");
         Assertions.assertNull(nullSource);
 
-        String nullKey = service.safeGetValue(accountInfo, null);
+        String nullKey = underTest.safeGetValue(accountInfo, null);
         Assertions.assertNull(nullKey);
 
-        String emptyKey = service.safeGetValue(accountInfo, "");
+        String emptyKey = underTest.safeGetValue(accountInfo, "");
         Assertions.assertNull(emptyKey);
 
-        String wrongKey = service.safeGetValue(accountInfo, "wrong");
+        String wrongKey = underTest.safeGetValue(accountInfo, "wrong");
         Assertions.assertNull(wrongKey);
     }
 

@@ -7,10 +7,7 @@ import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -18,11 +15,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class PaymentTest {
@@ -55,14 +49,7 @@ class PaymentTest {
 
     @Test
     void testPaymentOK(){
-        payment = Payment.Builder.aPaymentBuilder()
-                .withReference("PAYMENT-REF-1")
-                .withScheme("SEPA.DIRECT_DEBIT.CORE")
-                .withDirection("IN")
-                .withAction("create")
-                .withAmount("100")
-                .withCurrency("EUR")
-                .withLabel("the label")
+        payment = getValidPayment()
                 .build();
         String jsonPayment = payment.toString();
         Assertions.assertTrue(jsonPayment.contains("reference"));
@@ -73,56 +60,77 @@ class PaymentTest {
         Assertions.assertTrue(jsonPayment.contains("label"));
     }
 
-
-    @Test
-    void testPaymentKO(){
-        payment = Payment.Builder.aPaymentBuilder()
-                .withAction("payin")
-                .withLabel("the label")
-                .build();
-        //test on logs
-        Mockito.verify(appender, Mockito.atLeastOnce()).append(captor.capture());
-        final List<LogEvent> logs = captor.getAllValues();
-        assertEquals(5, logs.size());
-
-        assertEquals(Level.WARN, logs.get(0).getLevel());
-        assertEquals(Payment.REFERENCE_WARN, logs.get(0).getMessage().getFormattedMessage());
-        assertEquals(Level.WARN, logs.get(1).getLevel());
-        assertEquals(Payment.SCHEME_WARN, logs.get(1).getMessage().getFormattedMessage());
-        assertEquals(Level.WARN, logs.get(2).getLevel());
-        assertEquals(Payment.AMOUNT_WARN, logs.get(2).getMessage().getFormattedMessage());
-        assertEquals(Level.WARN, logs.get(3).getLevel());
-        assertEquals(Payment.CURRENCY_WARN, logs.get(3).getMessage().getFormattedMessage());
-        assertEquals(Level.WARN, logs.get(4).getLevel());
-        assertEquals(Payment.DIRECTION_WARN, logs.get(4).getMessage().getFormattedMessage());
+    private Payment.Builder getValidPayment() {
+        return Payment.Builder.aPaymentBuilder()
+                .withReference("PAYMENT-REF-1")
+                .withScheme("SEPA.DIRECT_DEBIT.CORE")
+                .withDirection("IN")
+                .withAction("create")
+                .withAmount("100")
+                .withCurrency("EUR")
+                .withLabel("the label");
     }
 
 
+    @Nested
+    class testInvalidPayment {
+        @Test
+        void testPaymentKOReference(){
+            payment = getValidPayment()
+                    .withReference(null)
+                    .build();
+            //test on logs
+            verify(appender, Mockito.atLeastOnce()).append(captor.capture());
+            assertEquals(Payment.REFERENCE_WARN, captor.getValue().getMessage().getFormattedMessage());
+        }
+        @Test
+        void testPaymentKOScheme(){
+            payment = getValidPayment()
+                    .withScheme(null)
+                    .build();
+            //test on logs
+            verify(appender, times(1)).append(captor.capture());
+            assertEquals(Payment.SCHEME_WARN, captor.getValue().getMessage().getFormattedMessage());
+        }
+        @Test
+        void testPaymentKOAmount(){
+            payment = getValidPayment()
+                    .withAmount(null)
+                    .build();
+            //test on logs
+            verify(appender, times(1)).append(captor.capture());
+            assertEquals(Payment.AMOUNT_WARN, captor.getValue().getMessage().getFormattedMessage());
+        }
+        @Test
+        void testPaymentKOCurrency(){
+            payment = getValidPayment()
+                    .withCurrency(null)
+                    .build();
+            //test on logs
+            verify(appender, times(1)).append(captor.capture());
+            assertEquals(Payment.CURRENCY_WARN, captor.getValue().getMessage().getFormattedMessage());
+        }
+        @Test
+        void testPaymentKODirection(){
+            payment = getValidPayment()
+                    .withDirection(null)
+                    .build();
+            //test on logs
+            verify(appender, times(1)).append(captor.capture());
+            assertEquals(Payment.DIRECTION_WARN, captor.getValue().getMessage().getFormattedMessage());
+        }
+        @Test
+        void testPaymentWithWrongDirection(){
+            payment = getValidPayment()
+                    .withDirection("ouest")
+                    .build();
 
-    @Test
-    void testPaymentWithWrongDirection(){
-        payment = Payment.Builder.aPaymentBuilder()
-                .withDirection("ouest")
-                .build();
-        System.out.println(payment);
-        String jsonPayment = payment.toString();
-        Assertions.assertTrue(jsonPayment.contains("direction"));
+            String jsonPayment = payment.toString();
+            Assertions.assertTrue(jsonPayment.contains("direction"));
 
-        Mockito.verify(appender, Mockito.atLeastOnce()).append(captor.capture());
-        final List<LogEvent> logs = captor.getAllValues();
-        assertEquals(6, logs.size());
-
-        assertEquals(Level.WARN, logs.get(0).getLevel());
-        assertEquals(Payment.REFERENCE_WARN, logs.get(0).getMessage().getFormattedMessage());
-        assertEquals(Level.WARN, logs.get(1).getLevel());
-        assertEquals(Payment.SCHEME_WARN, logs.get(1).getMessage().getFormattedMessage());
-        assertEquals(Level.WARN, logs.get(2).getLevel());
-        assertEquals(Payment.AMOUNT_WARN, logs.get(2).getMessage().getFormattedMessage());
-        assertEquals(Level.WARN, logs.get(3).getLevel());
-        assertEquals(Payment.CURRENCY_WARN, logs.get(3).getMessage().getFormattedMessage());
-        assertEquals(Level.WARN, logs.get(4).getLevel());
-        assertEquals(Payment.ACTION_WARN, logs.get(4).getMessage().getFormattedMessage());
-        assertEquals(Level.WARN, logs.get(5).getLevel());
-        assertEquals(Payment.WRONG_DIRECTION_WARN, logs.get(5).getMessage().getFormattedMessage());
+            verify(appender, times(1)).append(captor.capture());
+            assertEquals(Payment.WRONG_DIRECTION_WARN, captor.getValue().getMessage().getFormattedMessage());
+        }
     }
+
 }
