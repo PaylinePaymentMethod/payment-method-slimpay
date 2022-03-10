@@ -2,49 +2,39 @@ import org.apache.tools.ant.filters.EscapeUnicode
 import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
-    id "com.github.johnrengelman.shadow" version "6.1.0"
+    id "com.github.johnrengelman.shadow" version "7.1.0"
     id "org.sonarqube" version "3.3"
-    id "org.owasp.dependencycheck" version "6.2.2"
+    id "org.owasp.dependencycheck" version "6.4.1.1"
 }
 
-apply plugin: 'maven'
 apply plugin: 'maven-publish'
 apply plugin: 'java-library'
 apply plugin: 'jacoco'
-
-
-def externalFileName = "$projectDir/.external"
-
-if (file(externalFileName).exists()) {
-    apply from: "external.gradle"
-} else {
-    apply from: "monext.gradle"
-}
+apply from: "monext.gradle"
 
 description = 'payment-method-sdd-slimpay'
 group = 'com.payline.payment.sdd-slimpay'
 version = '1.1.2-SNAPSHOT'
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 14
+targetCompatibility = 14
 
 compileJava.options.encoding = 'UTF-8'
 
 ext {
-    paymentMethodApiVersion = '1.14'
-    paymentMethodIntegrationVersion = '1.14'
-    mockitoVersion = '3.12.4'
+    paymentMethodApiVersion = '1.16'
+    paymentMethodIntegrationVersion = '1.16'
+    mockitoVersion = '4.3.1'
+    junitVersion = '5.8.2'
+    log4jVersion = '2.17.2'
     releaseDirectoryPath = 'D:/build'
-}
-
-configurations {
-    fatJarTest
 }
 
 dependencies {
     compileOnly("com.payline:payment-method-api:$paymentMethodApiVersion")
 
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.1'
+    implementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
+    implementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
     implementation group: 'com.google.code.gson', name: 'gson', version: '2.8.8'
     implementation group: 'javax.json', name: 'javax.json-api', version: '1.1.4'
     implementation group: 'org.glassfish', name: 'javax.json', version: '1.1.4'
@@ -54,24 +44,17 @@ dependencies {
 
     implementation group: 'com.slimpay', name: 'hapiclient', version: '1.0.3'
 
-    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.1'
-    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.1'
-
-    testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.12.4'
-    testImplementation group: 'org.mockito', name: 'mockito-junit-jupiter', version: '3.12.4'
-    testImplementation group: 'org.powermock', name: 'powermock-api-mockito2', version: '2.0.9'
-
     testImplementation "com.payline:payment-method-api:${paymentMethodApiVersion}"
     testImplementation "com.payline:payment-method-integration:${paymentMethodIntegrationVersion}"
-    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.7.0'
-    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: '5.7.0'
-    testImplementation group: 'org.seleniumhq.selenium', name: 'selenium-server', version: '3.141.59'
-    testImplementation group: 'org.seleniumhq.selenium', name: 'selenium-support', version: '3.141.59'
+    testImplementation "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+    testImplementation "org.junit.jupiter:junit-jupiter-params:${junitVersion}"
+    testImplementation "org.mockito:mockito-core:${mockitoVersion}"
+    testImplementation "org.mockito:mockito-junit-jupiter:${mockitoVersion}"
 }
 
 dependencyCheck {
     format 'ALL'
-	skipConfigurations = ['jacocoAgent', 'jacocoAnt', 'annotationProcessor', 'axisGenAntTask', 'jaxws', 'execJar', 'jaxb', 'generateSources']
+    skipConfigurations = ['jacocoAgent', 'jacocoAnt', 'annotationProcessor', 'axisGenAntTask', 'jaxws', 'execJar', 'jaxb', 'generateSources']
     cve {
         urlBase = 'https://jindus.intra.monext.fr/nist-data-mirror/nvdcve-1.0-%d.json.gz'
         urlModified = 'https://jindus.intra.monext.fr/nist-data-mirror/nvdcve-1.0-modified.json.gz'
@@ -88,12 +71,6 @@ shadowJar {
         exclude(dependency('org.apache.logging.log4j:log4j-core'))
         exclude(dependency('org.junit.jupiter:junit-jupiter-params'))
         exclude(dependency('org.junit.jupiter:junit-jupiter-api'))
-        exclude(dependency('org.powermock:powermock-api-mockito2'))
-        exclude(dependency('org.powermock:powermock-module-junit4'))
-        exclude(dependency('org.powermock:powermock-module-junit4-rule-agent'))
-        exclude(dependency('org.powermock:powermock-module-junit4-rule'))
-        exclude(dependency('org.seleniumhq.selenium:selenium-server'))
-        exclude(dependency('org.seleniumhq.selenium:selenium-support'))
     }
 }
 
@@ -130,18 +107,10 @@ processResources {
     }
     filesMatching('release.properties') {
         filter(ReplaceTokens, tokens: [
-                'version': project.version.replaceFirst("-.*", ""),
+                'version': project.version,
                 'date'   : new Date().format("dd/MM/yyyy")
         ])
     }
-}
-
-// To create a JAR including test classes and dependencies
-task testJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {
-    dependsOn 'shadowJar', 'testClasses'
-    classifier = 'tests'
-    from sourceSets.test.output.classesDirs + shadowJar
-    configurations = [project.configurations.fatJarTest]
 }
 
 test {
@@ -152,5 +121,17 @@ test.exclude '**/*IT.class'
 jacocoTestReport {
     reports {
         xml.enabled true
+    }
+}
+
+plugins.withType(JacocoPlugin) {
+    tasks["test"].finalizedBy 'jacocoTestReport'
+}
+
+sonarqube {
+    properties {
+        property "sonar.coverage.jacoco.xmlReportPaths", "${project.buildDir}/reports/jacoco/test/jacocoTestReport.xml"
+        property "sonar.dependencyCheck.reportPath", "${project.buildDir}/reports/dependency-check-report.xml"
+        property 'sonar.dependencyCheck.htmlReportPath', "${project.buildDir}/reports/dependency-check-report.html"
     }
 }

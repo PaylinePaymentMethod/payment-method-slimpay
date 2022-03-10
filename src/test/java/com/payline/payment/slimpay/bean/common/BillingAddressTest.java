@@ -6,23 +6,17 @@ import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.core.config.LoggerConfig;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class BillingAddressTest {
@@ -39,13 +33,16 @@ class BillingAddressTest {
 
     @BeforeEach
     void setUp() {
-        when(appender.getName()).thenReturn("MockAppender");
-        lenient().when(appender.isStarted()).thenReturn(true);
+        doReturn("MockAppender").when(appender).getName();
+        lenient().doReturn(true).when(appender).isStarted();
+        lenient().doReturn(false).when(appender).isStopped();
 
         final LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
         final Configuration config = ctx.getConfiguration();
         loggerConfig = config.getLoggerConfig("com.payline.payment.slimpay.bean.common.BillingAddress");
-        loggerConfig.addAppender(appender, Level.INFO, null);
+        loggerConfig.addAppender(appender, Level.WARN, null);
+        Configurator.setRootLevel(Level.WARN);
+        ctx.updateLoggers();
     }
 
     @AfterEach
@@ -55,13 +52,7 @@ class BillingAddressTest {
 
     @Test
     void billingAddressTestOK(){
-        address = BillingAddress.Builder.aBillingAddressBuilder()
-                .withStreet1("10 rue de la paix")
-                .withStreet2("residence peace")
-                .withCity("Versailles")
-                .withCountry("FR")
-                .withPostalCode("78000")
-                .build();
+        address = getValidBillingAdress().build();
 
         String jsonAddress= address.toString();
         Assertions.assertTrue(jsonAddress.contains("10 rue de la paix"));
@@ -71,22 +62,55 @@ class BillingAddressTest {
         Assertions.assertTrue(jsonAddress.contains("78000"));
     }
 
-    @Test
-    void billingAddressTestKO(){
-        address = BillingAddress.Builder.aBillingAddressBuilder()
-                .build();
+    private BillingAddress.Builder getValidBillingAdress() {
+        return BillingAddress.Builder.aBillingAddressBuilder()
+                .withStreet1("10 rue de la paix")
+                .withStreet2("residence peace")
+                .withCity("Versailles")
+                .withCountry("FR")
+                .withPostalCode("78000");
+    }
 
-        Mockito.verify(appender, Mockito.atLeastOnce()).append(captor.capture());
-        final List<LogEvent> logs = captor.getAllValues();
-        assertEquals(4, logs.size());
+    @Nested
+    class billingaddresstestko {
+        @Test
+        void billingAddressTestKOStreet(){
+            address = getValidBillingAdress()
+                    .withStreet1(null)
+                    .build();
 
-        assertEquals(Level.WARN, logs.get(0).getLevel());
-        assertEquals(BillingAddress.STREET_WARN, logs.get(0).getMessage().getFormattedMessage());
-        assertEquals(Level.WARN, logs.get(1).getLevel());
-        assertEquals(BillingAddress.CITY_WARN, logs.get(1).getMessage().getFormattedMessage());
-        assertEquals(Level.WARN, logs.get(2).getLevel());
-        assertEquals(BillingAddress.POSTAL_CODE_WARN, logs.get(2).getMessage().getFormattedMessage());
-        assertEquals(Level.WARN, logs.get(3).getLevel());
-        assertEquals(BillingAddress.COUNTRY_WARN, logs.get(3).getMessage().getFormattedMessage());
+            verify(appender, times(1)).append(captor.capture());
+            assertEquals(BillingAddress.STREET_WARN, captor.getValue().getMessage().getFormattedMessage());
+        }
+
+        @Test
+        void billingAddressTestKOCity(){
+            address = getValidBillingAdress()
+                    .withCity(null)
+                    .build();
+
+            verify(appender, times(1)).append(captor.capture());
+            assertEquals(BillingAddress.CITY_WARN, captor.getValue().getMessage().getFormattedMessage());
+        }
+
+        @Test
+        void billingAddressTestKOPostal(){
+            address = getValidBillingAdress()
+                    .withPostalCode(null)
+                    .build();
+
+            verify(appender, times(1)).append(captor.capture());
+            assertEquals(BillingAddress.POSTAL_CODE_WARN, captor.getValue().getMessage().getFormattedMessage());
+        }
+
+        @Test
+        void billingAddressTestKOCountry(){
+            address = getValidBillingAdress()
+                    .withCountry(null)
+                    .build();
+
+            verify(appender, times(1)).append(captor.capture());
+            assertEquals(BillingAddress.COUNTRY_WARN, captor.getValue().getMessage().getFormattedMessage());
+        }
     }
 }

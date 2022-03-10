@@ -105,8 +105,6 @@ class MandateTest {
         Mockito.verify(appender, Mockito.atLeastOnce()).append(captor.capture());
         final List<LogEvent> logs = captor.getAllValues();
         assertEquals(1, logs.size());
-
-        assertEquals(Level.WARN, logs.get(0).getLevel());
         assertEquals(Mandate.REFERENCE_WARN, logs.get(0).getMessage().getFormattedMessage());
 
         String jsonMandate = mandate.toString();
@@ -134,8 +132,6 @@ class MandateTest {
         Mockito.verify(appender, Mockito.atLeastOnce()).append(captor.capture());
         final List<LogEvent> logs = captor.getAllValues();
         assertEquals(1, logs.size());
-
-        assertEquals(Level.WARN, logs.get(0).getLevel());
         assertEquals(Mandate.SIGNATORY_WARN, logs.get(0).getMessage().getFormattedMessage());
 
         LOGGER.info(jsonMandate);
@@ -162,8 +158,6 @@ class MandateTest {
         Mockito.verify(appender, Mockito.atLeastOnce()).append(captor.capture());
         final List<LogEvent> logs = captor.getAllValues();
         assertEquals(1, logs.size());
-
-        assertEquals(Level.WARN, logs.get(0).getLevel());
         assertEquals(Mandate.PAYMENT_SCHEME_WARN, logs.get(0).getMessage().getFormattedMessage());
 
         LOGGER.info(jsonMandate);
@@ -190,8 +184,6 @@ class MandateTest {
         Mockito.verify(appender, Mockito.atLeastOnce()).append(captor.capture());
         final List<LogEvent> logs = captor.getAllValues();
         assertEquals(1, logs.size());
-
-        assertEquals(Level.WARN, logs.get(0).getLevel());
         assertEquals(Mandate.CREATE_SEQUENCE_TYPE_WARN, logs.get(0).getMessage().getFormattedMessage());
 
         LOGGER.info(jsonMandate);

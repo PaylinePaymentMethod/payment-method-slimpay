@@ -29,7 +29,7 @@ public class RequestConfigBusinessImpl implements RequestConfigBusiness {
     /**
      * Map of all Contract or Partner parameters
      */
-    static final Map<String, PaylineParameterType> PARAMETERS_MAP = new HashMap<>();
+    protected static final Map<String, PaylineParameterType> PARAMETERS_MAP = new HashMap<>();
 
     static {
         // add contract config data

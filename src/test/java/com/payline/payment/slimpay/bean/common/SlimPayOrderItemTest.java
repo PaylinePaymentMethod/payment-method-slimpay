@@ -1,30 +1,54 @@
 package com.payline.payment.slimpay.bean.common;
 
-import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.LoggerConfig;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.reflect.Whitebox;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static com.payline.payment.slimpay.utils.BeansUtils.createDefaultMandate;
 import static com.payline.payment.slimpay.utils.BeansUtils.createDefaultPayin;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.never;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
 
 
-@PrepareForTest({SlimPayOrderItem.class})
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@ExtendWith(MockitoExtension.class)
 public class SlimPayOrderItemTest {
 
-    private Logger mockLogger;
+    @Mock
+    private Appender appender;
+
+    @Captor
+    private ArgumentCaptor<LogEvent> captor;
+
+    private LoggerConfig loggerConfig;
 
     @BeforeEach
-    public void setUp() {
-        mockLogger = Mockito.mock(Logger.class);
+    void setUp() {
 
-        Whitebox.setInternalState(SlimPayOrderItem.class, "LOGGER", mockLogger);
+        doReturn("MockAppender").when(appender).getName();
+        lenient().doReturn(true).when(appender).isStarted();
+
+        final LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+        final Configuration config = ctx.getConfiguration();
+        loggerConfig = config.getLoggerConfig(BillingAddress.class.getSimpleName());
+        loggerConfig.addAppender(appender, Level.INFO, null);
+    }
+
+    @AfterEach
+    void tearDown() {
+        loggerConfig.removeAppender("MockAppender");
     }
 
     @Test
@@ -34,7 +58,7 @@ public class SlimPayOrderItemTest {
                 .withPayin(createDefaultPayin("reference payment"))
                 .build();
 
-        Mockito.verify(mockLogger, never()).warn(anyString());
+        verify(appender, never()).append(any());
     }
 
     @Test
@@ -43,8 +67,7 @@ public class SlimPayOrderItemTest {
                 .withType("signMandate")
                 .withMandate(createDefaultMandate("reference mandate"))
                 .build();
-
-        Mockito.verify(mockLogger, never()).warn(anyString());
+        verify(appender, never()).append(captor.capture());
     }
 
     @Test
@@ -53,13 +76,17 @@ public class SlimPayOrderItemTest {
                 .withType("signMandate")
                 .build();
 
-        Mockito.verify(mockLogger, Mockito.times(1)).warn(Mockito.eq(SlimPayOrderItem.MANDATE_WARN));
+        verify(appender, Mockito.atLeastOnce()).append(captor.capture());
+        assertEquals(SlimPayOrderItem.MANDATE_WARN, captor.getValue().getMessage().getFormattedMessage());
     }
+
     @Test
     public void SlimpayOrderItemMandateWithoutType(){
         SlimPayOrderItem.Builder.aSlimPayOrderItemBuilder()
+                .withMandate(createDefaultMandate("reference mandate"))
                 .build();
 
-        Mockito.verify(mockLogger, Mockito.times(1)).warn(Mockito.eq(SlimPayOrderItem.TYPE_WARN));
+        verify(appender, Mockito.atLeastOnce()).append(captor.capture());
+        assertEquals(SlimPayOrderItem.TYPE_WARN, captor.getValue().getMessage().getFormattedMessage());
     }
 }

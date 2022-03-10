@@ -1,31 +1,57 @@
 package com.payline.payment.slimpay.bean.common;
 
-import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.LoggerConfig;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.reflect.Whitebox;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static com.payline.payment.slimpay.utils.BeansUtils.createDefaultBillingAddress;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
 
-@PrepareForTest({Signatory.class})
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@ExtendWith(MockitoExtension.class)
 public class SignatoryTest {
 
     private Signatory signatory;
 
-    private Logger mockLogger;
+    @Mock
+    private Appender appender;
+
+    @Captor
+    private ArgumentCaptor<LogEvent> captor;
+
+    private LoggerConfig loggerConfig;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
 
-        mockLogger = Mockito.mock(Logger.class);
+        doReturn("MockAppender").when(appender).getName();
+        lenient().doReturn(true).when(appender).isStarted();
 
-        Whitebox.setInternalState(Signatory.class, "LOGGER", mockLogger);
+        final LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+        final Configuration config = ctx.getConfiguration();
+        loggerConfig = config.getLoggerConfig(BillingAddress.class.getSimpleName());
+        loggerConfig.addAppender(appender, Level.INFO, null);
     }
+
+    @AfterEach
+    void tearDown() {
+        loggerConfig.removeAppender("MockAppender");
+    }
+
 
     @Test
     public void signatoryOk(){
@@ -55,9 +81,9 @@ public class SignatoryTest {
                 .withEmail("toto@emailcom")
                 .withTelephone("+33725262729")
                 .build();
+
         //test on logs
-        Mockito.verify(mockLogger, Mockito.times(1)).warn(Mockito.eq(Signatory.FAMILY_NAME_WARN));
-        Mockito.verify(mockLogger, Mockito.times(1)).warn(Mockito.eq(Signatory.GIVEN_NAME_WARN));
+        verify(appender, times(2)).append(captor.capture());
     }
 
     @Test
@@ -70,7 +96,9 @@ public class SignatoryTest {
                 .withEmail("toto@emailcom")
                 .withTelephone("000")
                 .build();
+
         //test on logs
-        Mockito.verify(mockLogger, Mockito.times(1)).warn(Mockito.eq(Signatory.TELEPHONE_WARN));
+        verify(appender, Mockito.atLeastOnce()).append(captor.capture());
+        assertEquals(Signatory.TELEPHONE_WARN, captor.getValue().getMessage().getFormattedMessage());
     }
 }

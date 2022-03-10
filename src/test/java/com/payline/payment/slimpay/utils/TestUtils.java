@@ -184,6 +184,7 @@ public class TestUtils {
                 .withPartnerTransactionId(TRANSACTION_ID)
                 .withPartnerConfiguration(PARTNER_CONFIGURATION)
                 .withTransactionAdditionalData(ADDITIONAL_DATA)
+                .withTotalRefundedAmount(amountRefunded)
                 .build();
     }
 
