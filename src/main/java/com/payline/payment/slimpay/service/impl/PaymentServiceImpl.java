@@ -50,7 +50,7 @@ public class PaymentServiceImpl implements PaymentService {
         try {
             slimpayOrderRequest = beanAssembleService.assembleSlimPayOrderRequest(paymentRequest);
         } catch (InvalidDataException e) {
-            LOGGER.error("Unable to build a orderRequest {}", e);
+            LOGGER.error("Unable to build a orderRequest", e);
             return e.toPaymentResponseFailure();
         }
         //make order request body

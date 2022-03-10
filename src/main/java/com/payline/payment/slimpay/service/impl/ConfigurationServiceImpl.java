@@ -159,7 +159,7 @@ public class ConfigurationServiceImpl implements ConfigurationService {
 
         } catch (PluginTechnicalException e) {
             //log error
-            LOGGER.error("Error while calling the plugin {}", e);
+            LOGGER.error("Error while calling the plugin", e);
             String errorCode = e.getMessage();
             //if client side error, add it to error array
             if (errorCode.contains(UNAUTHORIZED) || errorCode.contains(FORBIDDEN)) {
