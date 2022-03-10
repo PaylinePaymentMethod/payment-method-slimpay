@@ -55,10 +55,6 @@ dependencies {
 dependencyCheck {
     format 'ALL'
     skipConfigurations = ['jacocoAgent', 'jacocoAnt', 'annotationProcessor', 'axisGenAntTask', 'jaxws', 'execJar', 'jaxb', 'generateSources']
-    cve {
-        urlBase = 'https://jindus.intra.monext.fr/nist-data-mirror/nvdcve-1.0-%d.json.gz'
-        urlModified = 'https://jindus.intra.monext.fr/nist-data-mirror/nvdcve-1.0-modified.json.gz'
-    }
 }
 
 assemble.dependsOn shadowJar
