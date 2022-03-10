@@ -17,6 +17,7 @@ import java.util.Currency;
 import java.util.Locale;
 
 import static com.payline.payment.slimpay.utils.TestUtils.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 
@@ -68,8 +69,10 @@ public class PaymentFormConfigurationServiceImplTest {
         Assertions.assertTrue(paymentFormLogoResponse instanceof PaymentFormLogoResponseFile);
 
         PaymentFormLogoResponseFile casted = (PaymentFormLogoResponseFile) paymentFormLogoResponse;
-        Assertions.assertEquals(height, casted.getHeight());
-        Assertions.assertEquals(width, casted.getWidth());
+        assertEquals(height, casted.getHeight());
+        assertEquals(width, casted.getWidth());
+        assertEquals("slimpay", casted.getTitle());
+        assertEquals("slimpay", casted.getAlt());
     }
 
     @Test

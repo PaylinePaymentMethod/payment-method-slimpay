@@ -28,13 +28,11 @@ public abstract class DefaultPaymentFormConfigurationService implements PaymentF
     @Override
     public PaymentFormLogoResponse getPaymentFormLogo(PaymentFormLogoRequest paymentFormLogoRequest) {
 
-        Locale locale = paymentFormLogoRequest.getLocale();
-
         return PaymentFormLogoResponseFile.PaymentFormLogoResponseFileBuilder.aPaymentFormLogoResponseFile()
-                .withHeight(Integer.valueOf(logoProperties.get(LOGO_HEIGHT)))
-                .withWidth(Integer.valueOf(logoProperties.get(LOGO_WIDTH)))
-                .withTitle(i18n.getMessage(logoProperties.get(LOGO_TITLE), locale))
-                .withAlt(i18n.getMessage(logoProperties.get(LOGO_ALT), locale))
+                .withHeight(Integer.parseInt(logoProperties.get(LOGO_HEIGHT)))
+                .withWidth(Integer.parseInt(logoProperties.get(LOGO_WIDTH)))
+                .withTitle(logoProperties.get(LOGO_TITLE))
+                .withAlt(logoProperties.get(LOGO_ALT))
                 .build();
     }
 
